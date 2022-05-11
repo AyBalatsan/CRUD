@@ -1,5 +1,8 @@
 import { useState, useEffect, FC } from 'react';
 import styled from 'styled-components';
+import { iListUser, iEditUser } from "../types";
+
+
 
 const listUsers = [
   { id: 1, name: "Leanne Graham" },
@@ -15,22 +18,54 @@ const listUsers = [
 ]
 
 const MainPage = () => {
-  const [users, setUser] = useState(listUsers)
+  const [userData, setUserData] = useState('')
+  const [users, setUsers] = useState<iListUser[]>(listUsers)
   const [valueField, setValueField] = useState('')
-  const [valueFieldAddUser, setValueFieldAddUser] = useState('')
-
+  const [editUserData, setEditUserData] = useState<iEditUser>({
+    isEdit: false,
+    userID: null
+  })
+  const isFilledFields = userData
   const filteredUsers = users.filter(user => {
     return user.name.toLocaleLowerCase().includes(valueField.toLocaleLowerCase())
   })
 
-  const addUser = (event: { key: string; }) => {
-    if (event.key === 'Enter' && valueFieldAddUser !== '') {
-      setUser([...users, { id: Date.now(), name: valueFieldAddUser }])
-      setValueFieldAddUser('')
-      
+  const handleSubmitUser = (event: any) => {
+    event.preventDefault()
+    if (isFilledFields) {   
+      if (editUserData.isEdit && editUserData.userID) {
+        const editedData = users
+        
+        editedData.map(user => user.id == editUserData.userID ? user.name = userData : user.name)
+        setUsers(editedData)
+        setEditUserData({
+          isEdit: false,
+          userID: null
+        })
+        setUserData('') 
+      } else {
+        setUsers([...users, { id: Date.now(), name: userData }])
+        setUserData('')        
+      }   
     }
   }
 
+
+
+  const handleEditClick = (name: string, id: number) => {
+    setUserData(name)
+    setEditUserData({
+      isEdit: true,
+      userID: id
+    })  
+  }
+
+
+
+  const handleCleanClick = () => setUserData('')
+  const handleRemoveClick = (idRemove:number) => {
+    setUsers(users.filter((user)=>user.id !== idRemove))
+  }
   return (
     <AppSell>
       <form>
@@ -40,25 +75,33 @@ const MainPage = () => {
           onChange={(event) => setValueField(event.target.value)}
         />
       </form>
-      <Title>Список пользователей</Title>      
-      <InputDefault
-        type='text'
-        placeholder='Add user'
-        value={valueFieldAddUser}
-        onChange={(event) => setValueFieldAddUser(event.target.value)}
-        onKeyPress={addUser}
-      />
-      <List>
-        {filteredUsers.map((user) => (
-          <Item key={user.id}>
-            <p>{user.name}</p>
-            <ShellButton>
-              <button><img src="/edit.png" alt="edit"/></button>
-              <button><img src="/delete.png" alt="del"/></button>
-            </ShellButton>
-          </Item>
-        ))}
-      </List>
+      <Title>Список пользователей</Title>
+      <ShellList>
+        <List>
+          {filteredUsers.map((user) => (
+            <Item key={user.id}>
+              <p>{user.name}</p>
+              <ShellButton>
+                <button onClick={() => handleEditClick(user.name, user.id)}><img src="/edit.png" alt="edit" /></button>
+                <button onClick={() => handleRemoveClick(user.id)}><img src="/delete.png" alt="del" /></button>
+              </ShellButton>
+            </Item>
+          ))}
+        </List>
+        <FormManagement onSubmit={handleSubmitUser} onReset={handleCleanClick}>
+          <InputDefault
+            type='text'
+            placeholder='Add user'
+            value={userData}
+            onChange={(event) => setUserData(event.target.value)}
+          />
+          <ShellButton>
+            <ButtonCustom type='reset' color='#ff3f1d'>Reset</ButtonCustom>
+            <ButtonCustom disabled={!isFilledFields} color='#26a69a' >{editUserData.isEdit ? 'Edit' : 'Add'}</ButtonCustom>
+          </ShellButton>
+        </FormManagement>
+
+      </ShellList>
     </AppSell>
   )
 }
@@ -83,12 +126,23 @@ const Title = styled.h1`
   text-align: center;
   color: #1b1b1b;
 `
+const ShellList = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+  margin-top: 50px;  
+`
 const List = styled.ol`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 80px;
   list-style-type: none; 
 	counter-reset: num;
 	margin: 0 0 0 35px;
-	padding: 15px 0 5px 0;
+	padding: 15px 0px 5px 30px;
 	font-size: 18px;
+  max-width: 650px;
+  
   & li {
     position: relative;	
     margin: 0 0 0 0;
@@ -99,7 +153,7 @@ const List = styled.ol`
 	counter-increment: num;
 	display: inline-block;	
 	position: absolute;
-	top: 0px;
+	top: 2px;
 	left: -26px;
 	width: 20px;    
 	color: #ef6780;
@@ -107,7 +161,8 @@ const List = styled.ol`
 }
 `
 const Item = styled.li`
-  max-width: 360px;
+  max-width: 260px;
+  height: 37px;
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -140,4 +195,26 @@ const ShellButton = styled.div`
   display: flex;
   gap: 8px;
   align-items: center;
+`
+const FormManagement = styled.form`
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  padding: 20px 15px;
+`
+const ButtonCustom = styled.button`
+  padding: 4px 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  background-color: #e78300;
+  border-radius: 5px;
+  transition: all 0.6s;
+  &:hover{    
+    background: ${props => props.color};
+  }
+  &:disabled{
+    background-color: #fab55a;
+    cursor: auto;
+  }
 `
