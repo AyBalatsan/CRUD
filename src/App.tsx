@@ -1,10 +1,11 @@
 import styled from 'styled-components';
 import MainPage from './pages';
+import { listUsers } from './mockDate';
 
 const App = () => {
   return (
     <AppWrapper>
-      <MainPage />
+      <MainPage listUsers={listUsers} />
     </AppWrapper>
   );
 }
